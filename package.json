@@ -1,0 +1,20 @@
+{
+  "name": "graphql_playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.mjs",
+    "seed": "node prisma/seed.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@graphql-tools/schema": "^10.0.4",
+    "@prisma/client": "^5.15.0",
+    "apollo-server-express": "^3.13.0",
+    "express": "^4.19.2"
+  }
+}

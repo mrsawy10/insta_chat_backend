@@ -1,0 +1,681 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(cuid())
+  name              String              @db.VarChar(255)
+  lastname          String              @db.VarChar(255)
+  username          String              @unique(map: "username") @db.VarChar(255)
+  avatar            String?
+  numFollowers      Int                 @default(0)
+  numFollowing      Int                 @default(0)
+  numPosts          Int                 @default(0)
+  numVisits         Int                 @default(0)
+  validated         Boolean             @default(false)
+  email             String              @unique(map: "email") @db.VarChar(255)
+  phone             String?             @unique(map: "phone") @db.VarChar(255)
+  password          String              @db.VarChar(255)
+  birthday          DateTime @default(now()) @db.DateTime(0)
+  gender            Boolean
+  bio               String?             @db.VarChar(255)
+  private           Boolean             @default(false)
+  disabled          Boolean             @default(false)
+  isActive          Boolean             @default(false)
+  lastActiveAt      DateTime?           @default(now()) @db.DateTime(0)
+  token             String?             @db.VarChar(255)
+  mute              Boolean             @default(false)
+  allowMessaging    Boolean             @default(true)
+  showState         Boolean             @default(true)
+  categoryId        Int?
+  professional      Boolean             @default(false)
+  state             String?             @db.VarChar(255)
+  isValid           Boolean             @default(false)
+  otpCode           Int?
+  createdAt         DateTime?           @db.DateTime(0)
+  updatedAt         DateTime?           @db.DateTime(0)
+  // archivedconversations                          archivedconversations[]
+  comments          Comment[]
+  favourites        Favourite[]
+  posts             Post[]
+  followers         Follow[]            @relation("followers")
+  following         Follow[]            @relation("following")
+  conversation_User Conversation_User[]
+  notifications     Notification[]
+  stories           Story[]
+  StoryLike         StoryLike[]
+  StoryComment      StoryComment[]
+  storyseen         storyseen[]
+  countryId         String?
+  country           Country?            @relation(fields: [countryId], references: [id], onUpdate: Restrict)
+  // removerequests                                 removerequests[]
+  // socialmedia                                    socialmedia[]
+  // media                                          media?                @relation(fields: [pictureId], references: [id], onUpdate: Restrict, map: "users_ibfk_1")
+  // validationrequests                             validationrequests[]
+  // wallets                                        wallets[]
+
+  // @@index([countryId], map: "countryId")
+  // @@index([pictureId], map: "pictureId")
+  Replay      Replay[]
+  Replaylikes Replaylikes[]
+}
+
+model Country {
+  id       String @id @default(cuid())
+  name     String @db.VarChar(255)
+  dialCode String @db.VarChar(255)
+  users    User[]
+  // validationrequests validationrequests[]
+}
+
+model Story {
+  id            String         @id @default(cuid())
+  mediaId       String
+  userId        String
+  createdAt     DateTime?      @db.DateTime(0)
+  expiredAt     DateTime?      @db.DateTime(0)
+  updatedAt     DateTime?      @db.DateTime(0)
+  media         Media          @relation(fields: [mediaId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "stories_ibfk_1")
+  users         User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "stories_ibfk_2")
+  storyComments StoryComment[]
+  storyLikes    StoryLike[]
+  storyseen     storyseen[]
+
+  @@index([mediaId], map: "mediaId")
+  @@index([userId], map: "userId")
+}
+
+model StoryLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @db.DateTime(0)
+  userId    String
+  storyId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId], map: "userId")
+  @@index([storyId], map: "storyId")
+}
+
+model StoryComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now()) @db.DateTime(0)
+  userId    String
+  storyId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId], map: "userId")
+  @@index([storyId], map: "storyId")
+}
+
+model storyseen {
+  id      String  @id @default(cuid())
+  userId  String
+  storyId String?
+  users   User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storyseen_ibfk_1")
+  story   Story?  @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storyseen_ibfk_2")
+
+  @@index([storyId], map: "storyId")
+  @@index([userId], map: "userId")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String?   @db.VarChar(255)
+  mediaId   String?
+  postId    String?
+  userId    String?
+  createdAt DateTime? @db.DateTime(0)
+  updatedAt DateTime? @db.DateTime(0)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "comments_ibfk_3")
+  media     Media?    @relation(fields: [mediaId], references: [id], onUpdate: Restrict, map: "comments_ibfk_1")
+  post      Post?     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  replays   Replay[]
+
+  @@index([mediaId], map: "mediaId")
+  @@index([postId], map: "postId")
+  @@index([userId], map: "userId")
+}
+
+model Replay {
+  id          String        @id @default(cuid())
+  replay      String?       @db.VarChar(255)
+  mediaId     String?
+  commentId   String?
+  userId      String?
+  createdAt   DateTime      @default(now()) @db.DateTime(0)
+  replaylikes Replaylikes[]
+  media       Media?        @relation(fields: [mediaId], references: [id], onUpdate: Restrict, map: "replays_ibfk_1")
+  comment     Comment?      @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "replays_ibfk_2")
+  user        User?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "replays_ibfk_3")
+
+  @@index([commentId], map: "commentId")
+  @@index([mediaId], map: "mediaId")
+  @@index([userId], map: "userId")
+}
+
+model Replaylikes {
+  id       String @id @default(cuid())
+  replayId String
+  userId   String
+  replay   Replay @relation(fields: [replayId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "replaylikes_ibfk_1")
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "replaylikes_ibfk_2")
+
+  @@index([replayId], map: "replayId")
+  @@index([userId], map: "userId")
+}
+
+model Post {
+  id            String      @id @default(cuid())
+  title         String?     @db.VarChar(255)
+  type          posts_type  @default(note)
+  likes         Int         @default(0)
+  numOfComments Int         @default(0)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  // user        User
+  createdAt     DateTime?   @db.DateTime(0)
+  updatedAt     DateTime?   @db.DateTime(0)
+  comments      Comment[]
+  // favorites        favorites[]
+  // messages         messages[]
+  // posthashtags     posthashtags[]     @ignore
+  // postkeywords     postkeywords[]     @ignore
+  postmedia     postmedia[] @ignore
+  // reels            reels[]
+  // reports          reports[]
+  // services         services[]
+  // unimportantposts unimportantposts[] @ignore
+  // works            works[]
+  favourites    Favourite[]
+
+  @@index([userId], map: "userId")
+}
+
+model postmedia {
+  id      String @id @default(cuid())
+  postId  String
+  mediaId String
+  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  media   Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  // @@index([mediaId], map: "mediaId")
+  // @@index([postId], map: "postId")
+  // @@ignore
+}
+
+model Media {
+  id String @id @default(cuid())
+
+  path      String      @db.VarChar(255)
+  comments  Comment[]
+  // messages           messages[]
+  postmedia postmedia[] @ignore
+  // reels              reels[]
+  // replays            replays[]
+  // stories            stories[]
+  // users              users[]
+  // validationrequests validationrequests[]
+  Message   Message?
+  Story     Story[]
+  Replay    Replay[]
+}
+
+model Favourite {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now()) @db.DateTime(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  Post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+}
+
+model Follow {
+  id          String @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User   @relation("following", fields: [followerId], references: [id])
+  following   User   @relation("followers", fields: [followingId], references: [id])
+}
+
+//   model message
+
+model Message {
+  id             String        @id @default(cuid())
+  content        String?       @db.VarChar(255)
+  type           messages_type @default(text)
+  // /  conversationId String
+  userId         String
+  // accountId      Int?
+  createdAt      DateTime      @default(now()) @db.DateTime(0)
+  // postId         Int?
+  mediaId        String?       @unique // This field must be unique
+  conversationId String?       @unique
+  media          Media?        @relation(fields: [mediaId], references: [id], onUpdate: Restrict)
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  // media          Media?        @relation(fields: [mediaId], references: [id], onUpdate: Restrict)
+  // conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  // // users_messages_userIdTousers    users         @relation("messages_userIdTousers", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "messages_ibfk_3")
+  // users_messages_accountIdTousers users?        @relation("messages_accountIdTousers", fields: [accountId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "messages_ibfk_4")
+  // posts                           posts?        @relation(fields: [postId], references: [id], onUpdate: Restrict, map: "messages_ibfk_5")
+
+  // @@index([accountId], map: "accountId")
+  // @@index([conversationId], map: "conversationId")
+  // @@index([mediaId], map: "mediaId")
+  // @@index([postId], map: "postId")
+  // @@index([userId], map: "userId")
+}
+
+// _________________
+
+model Conversation {
+  id                  String              @id @default(cuid())
+  type                conversations_type  @default(individual)
+  updatedAt           DateTime            @default(now()) @db.DateTime(0)
+  simatId             String?
+  // archivedconversations archivedconversations[]
+  conversationmembers Conversation_User[]
+  simats              simats?             @relation(fields: [simatId], references: [id], onUpdate: Restrict, map: "conversations_ibfk_1")
+  messages            Message[]
+  // reports             reports[]
+
+  // @@index([simatId], map: "simatId")
+}
+
+model Conversation_User {
+  id                 String       @id @default(cuid())
+  conversationId     String
+  userId             String
+  lastSeenAt         DateTime?    @db.DateTime(0)
+  allowNotifications Boolean      @default(true)
+  isParticipant      Boolean      @default(false)
+  conversation       Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  users              User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([conversationId], map: "conversationId")
+  @@index([userId], map: "userId")
+}
+
+model simats {
+  id            String         @id @default(cuid())
+  path          String?        @db.VarChar(255)
+  conversations Conversation[]
+}
+
+model Notification {
+  id                       String            @id @default(cuid())
+  userId                   String
+  content                  String
+  sawFollowNotificationAt  String?           @db.VarChar(255)
+  sawLikeNotificationAt    String?           @db.VarChar(255)
+  sawCommentNotificationAt String?           @db.VarChar(255)
+  sawServiceNotificationAt String?           @db.VarChar(255)
+  type                     notification_type @default(service)
+  user                     User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  // @@index([userId], map: "userId")
+}
+
+enum notification_type {
+  follow
+  like
+  comment
+  service
+}
+
+// ___________
+
+// model archivedconversations {
+//   id             String        @id @default(cuid())
+//   conversationId Int
+//   userId         Int
+//   createdAt      DateTime      @default(now()) @db.DateTime(0)
+//   conversations  conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "archivedconversations_ibfk_1")
+//   users          users         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "archivedconversations_ibfk_2")
+
+//   @@index([conversationId], map: "conversationId")
+//   @@index([userId], map: "userId")
+// }
+
+// model blockedusers {
+//   id                                      String   @id @default(cuid())
+//   userId                                  Int
+//   blockedUserId                           Int
+//   createdAt                               DateTime @default(now()) @db.DateTime(0)
+//   users_blockedusers_userIdTousers        users    @relation("blockedusers_userIdTousers", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "blockedusers_ibfk_1")
+//   users_blockedusers_blockedUserIdTousers users    @relation("blockedusers_blockedUserIdTousers", fields: [blockedUserId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "blockedusers_ibfk_2")
+
+//   @@index([blockedUserId], map: "blockedUserId")
+//   @@index([userId], map: "userId")
+// }
+
+// model categories {
+//   id                 String               @id @default(cuid())
+//   name               String               @db.VarChar(255)
+//   services           services[]
+//   validationrequests validationrequests[]
+//   works              works[]
+// }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model commentlikes {
+//   id        String   @id @default(cuid())
+//   commentId Int
+//   userId    Int
+//   comments  comments @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "commentlikes_ibfk_1")
+//   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "commentlikes_ibfk_2")
+
+//   @@index([commentId], map: "commentId")
+//   @@index([userId], map: "userId")
+//   @@ignore
+// }
+
+// model follows {
+//   id                               String   @id @default(cuid())
+//   userId                           Int
+//   followingId                      Int
+//   createdAt                        DateTime @default(now()) @db.DateTime(0)
+//   users_follows_userIdTousers      users    @relation("follows_userIdTousers", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "follows_ibfk_1")
+//   users_follows_followingIdTousers users    @relation("follows_followingIdTousers", fields: [followingId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "follows_ibfk_2")
+
+//   @@index([followingId], map: "followingId")
+//   @@index([userId], map: "userId")
+// }
+
+// model hashtags {
+//   id           String         @id @default(cuid())
+//   name         String         @db.VarChar(255)
+//   posthashtags posthashtags[] @ignore
+//   userhashtags userhashtags[] @ignore
+// }
+
+// model keywords {
+//   id String @id @default(cuid())
+
+//   name         String         @db.VarChar(255)
+//   postkeywords postkeywords[] @ignore
+// }
+
+// model likes {
+//   id        Int      @id @default(autoincrement())
+//   userId    Int
+//   postId    Int
+//   createdAt DateTime @default(now()) @db.DateTime(0)
+//   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "likes_ibfk_1")
+//   posts     posts    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "likes_ibfk_2")
+
+//   @@index([postId], map: "postId")
+//   @@index([userId], map: "userId")
+// }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model posthashtags {
+//   id String @id @default(cuid())
+
+//   postId    Int
+//   hashtagId Int
+//   posts     posts    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "posthashtags_ibfk_1")
+//   hashtags  hashtags @relation(fields: [hashtagId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "posthashtags_ibfk_2")
+
+//   @@index([hashtagId], map: "hashtagId")
+//   @@index([postId], map: "postId")
+//   @@ignore
+// }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model postkeywords {
+//   id String @id @default(cuid())
+
+//   postId    Int
+//   keywordId Int
+//   posts     posts    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "postkeywords_ibfk_1")
+//   keywords  keywords @relation(fields: [keywordId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "postkeywords_ibfk_2")
+
+//   @@index([keywordId], map: "keywordId")
+//   @@index([postId], map: "postId")
+//   @@ignore
+// }
+
+// model reels {
+//   id          String @id @default(cuid())
+//   thumbnailId Int
+//   postId      Int
+//   views       Int    @default(0)
+//   media       media  @relation(fields: [thumbnailId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "reels_ibfk_1")
+//   posts       posts  @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "reels_ibfk_2")
+
+//   @@index([postId], map: "postId")
+//   @@index([thumbnailId], map: "thumbnailId")
+// }
+
+// model removereasons {
+//   id             String           @id @default(cuid())
+//   reason         String?          @db.VarChar(255)
+//   removerequests removerequests[]
+// }
+
+// model removerequests {
+//   id            String         @id @default(cuid())
+//   reason        String?        @db.VarChar(255)
+//   reasonId      Int?
+//   userId        Int
+//   removereasons removereasons? @relation(fields: [reasonId], references: [id], onUpdate: Restrict, map: "removerequests_ibfk_1")
+//   users         users          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "removerequests_ibfk_2")
+
+//   @@index([reasonId], map: "reasonId")
+//   @@index([userId], map: "userId")
+// }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+
+// model reportreasons {
+//   id      Int       @id @default(autoincrement())
+//   reason  String?   @db.VarChar(255)
+//   reports reports[]
+// }
+
+// model reports {
+//   id                              Int            @id @default(autoincrement())
+//   reporterId                      Int
+//   reasonId                        Int
+//   details                         String         @db.VarChar(255)
+//   userId                          Int?
+//   postId                          Int?
+//   conversationId                  Int?
+//   createdAt                       DateTime       @default(now()) @db.DateTime(0)
+//   users_reports_reporterIdTousers users          @relation("reports_reporterIdTousers", fields: [reporterId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "reports_ibfk_1")
+//   reportreasons                   reportreasons  @relation(fields: [reasonId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "reports_ibfk_2")
+//   users_reports_userIdTousers     users?         @relation("reports_userIdTousers", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "reports_ibfk_3")
+//   posts                           posts?         @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "reports_ibfk_4")
+//   conversations                   conversations? @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "reports_ibfk_5")
+
+//   @@index([conversationId], map: "conversationId")
+//   @@index([postId], map: "postId")
+//   @@index([reasonId], map: "reasonId")
+//   @@index([reporterId], map: "reporterId")
+//   @@index([userId], map: "userId")
+// }
+
+// model sequelizemeta {
+//   name String @id @unique(map: "name") @db.VarChar(255)
+// }
+
+// model services {
+//   id          Int        @id @default(autoincrement())
+//   period      Int
+//   price       Int
+//   description String?    @db.Text
+//   categoryId  Int
+//   postId      Int
+//   categories  categories @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "services_ibfk_1")
+//   posts       posts      @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "services_ibfk_2")
+
+//   @@index([categoryId], map: "categoryId")
+//   @@index([postId], map: "postId")
+// }
+
+// model socialmedia {
+//   id        Int     @id @default(autoincrement())
+//   userId    Int
+//   facebook  String? @db.VarChar(255)
+//   twitter   String? @db.VarChar(255)
+//   snapshot  String? @db.VarChar(255)
+//   instagram String? @db.VarChar(255)
+//   users     users   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "socialmedia_ibfk_1")
+
+//   @@index([userId], map: "userId")
+// }
+
+// model storycomments {
+//   id        Int      @id @default(autoincrement())
+//   storyId   Int
+//   userId    Int
+//   comment   String   @db.VarChar(255)
+//   createdAt DateTime @default(now()) @db.DateTime(0)
+//   stories   stories  @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storycomments_ibfk_1")
+//   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storycomments_ibfk_2")
+
+//   @@index([storyId], map: "storyId")
+//   @@index([userId], map: "userId")
+// }
+
+// model storylikes {
+//   id        Int      @id @default(autoincrement())
+//   storyId   Int
+//   userId    Int
+//   createdAt DateTime @default(now()) @db.DateTime(0)
+//   stories   stories  @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storylikes_ibfk_1")
+//   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storylikes_ibfk_2")
+
+//   @@index([storyId], map: "storyId")
+//   @@index([userId], map: "userId")
+// }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model storyseen {
+//   userId  Int
+//   storyId Int?
+//   users   users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storyseen_ibfk_1")
+//   stories stories? @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storyseen_ibfk_2")
+
+//   @@index([storyId], map: "storyId")
+//   @@index([userId], map: "userId")
+//   @@ignore
+// }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model unimportantposts {
+//   postId Int
+//   userId Int
+//   posts  posts @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "unimportantposts_ibfk_1")
+//   users  users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "unimportantposts_ibfk_2")
+
+//   @@index([postId], map: "postId")
+//   @@index([userId], map: "userId")
+//   @@ignore
+// }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model userhashtags {
+//   id        String   @id @default(cuid())
+//   userId    Int
+//   hashtagId Int
+//   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "userhashtags_ibfk_1")
+//   hashtags  hashtags @relation(fields: [hashtagId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "userhashtags_ibfk_2")
+
+//   @@index([hashtagId], map: "hashtagId")
+//   @@index([userId], map: "userId")
+//   @@ignore
+// }
+
+// model validationrequests {
+//   id         String                      @id @default(cuid())
+//   name       String                      @db.VarChar(255)
+//   lastname   String                      @db.VarChar(255)
+//   userId     Int
+//   // fileType   validationrequests_fileType @default(dbgenerated("بطاقة تعريف"))
+//   mediaId    Int
+//   countryId  Int
+//   categoryId Int
+//   status     validationrequests_status   @default(pending)
+//   note       String?                     @db.VarChar(255)
+//   username   String                      @db.VarChar(255)
+//   linkOne    String                      @db.VarChar(255)
+//   linkTwo    String?                     @db.VarChar(255)
+//   createdAt  DateTime                    @default(now()) @db.DateTime(0)
+//   users      users                       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "validationrequests_ibfk_1")
+//   media      media                       @relation(fields: [mediaId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "validationrequests_ibfk_2")
+//   countries  countries                   @relation(fields: [countryId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "validationrequests_ibfk_3")
+//   categories categories                  @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "validationrequests_ibfk_4")
+
+//   @@index([categoryId], map: "categoryId")
+//   @@index([countryId], map: "countryId")
+//   @@index([mediaId], map: "mediaId")
+//   @@index([userId], map: "userId")
+// }
+
+// model wallets {
+//   id     String @id @default(cuid())
+//   userId Int
+//   funds  Float  @default(0) @db.Float
+//   users  users  @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "wallets_ibfk_1")
+
+//   @@index([userId], map: "userId")
+// }
+
+// model works {
+//   id          String     @id @default(cuid())
+//   date        DateTime   @default(now()) @db.DateTime(0)
+//   description String?    @db.Text
+//   link        String?    @db.VarChar(255)
+//   views       Int        @default(0)
+//   categoryId  Int
+//   postId      Int
+//   categories  categories @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "works_ibfk_1")
+//   posts       posts      @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "works_ibfk_2")
+
+//   @@index([categoryId], map: "categoryId")
+//   @@index([postId], map: "postId")
+// }
+
+enum conversations_type {
+  individual
+  group
+}
+
+enum messages_type {
+  text
+  image
+  video
+  record
+  post
+  account
+}
+
+enum posts_type {
+  note
+  image
+  reel
+  work
+  service
+}
+
+// // enum validationrequests_fileType {
+// //   // بطاقة تعريف @map("بطاقة تعريف")
+// //   // رخصة قيادة @map("رخصة قيادة")
+// //   // جواز السفر @map("جواز السفر")
+// // }
+
+// enum validationrequests_status {
+//   pending
+//   rejected
+//   approuved
+// }
