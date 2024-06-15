@@ -8,51 +8,50 @@ datasource db {
 }
 
 model User {
-  id                String              @id @default(cuid())
-  name              String              @db.VarChar(255)
-  lastname          String              @db.VarChar(255)
-  username          String              @unique(map: "username") @db.VarChar(255)
-  avatar            String?
-  numFollowers      Int                 @default(0)
-  numFollowing      Int                 @default(0)
-  numPosts          Int                 @default(0)
-  numVisits         Int                 @default(0)
-  validated         Boolean             @default(false)
-  email             String              @unique(map: "email") @db.VarChar(255)
-  phone             String?             @unique(map: "phone") @db.VarChar(255)
-  password          String              @db.VarChar(255)
-  birthday          DateTime @default(now()) @db.DateTime(0)
-  gender            Boolean
-  bio               String?             @db.VarChar(255)
-  private           Boolean             @default(false)
-  disabled          Boolean             @default(false)
-  isActive          Boolean             @default(false)
-  lastActiveAt      DateTime?           @default(now()) @db.DateTime(0)
-  token             String?             @db.VarChar(255)
-  mute              Boolean             @default(false)
-  allowMessaging    Boolean             @default(true)
-  showState         Boolean             @default(true)
-  categoryId        Int?
-  professional      Boolean             @default(false)
-  state             String?             @db.VarChar(255)
-  isValid           Boolean             @default(false)
-  otpCode           Int?
-  createdAt         DateTime?           @db.DateTime(0)
-  updatedAt         DateTime?           @db.DateTime(0)
+  id           String  @id @default(cuid())
+  name         String  @db.VarChar(255)
+  avatar       String?
+  numFollowers Int     @default(0)
+  username     String  @unique() @db.VarChar(255)
+  numFollowing   Int            @default(0)
+  followers      Follow[]       @relation("followers")
+  following      Follow[]       @relation("following")
+  numPosts       Int            @default(0)
+  numVisits      Int            @default(0)
+  validated      Boolean        @default(false)
+  email          String         @unique(map: "email") @db.VarChar(255)
+  phone          String?        @unique(map: "phone") @db.VarChar(255)
+  password       String         @db.VarChar(255)
+  birthday       DateTime       @default(now()) @db.DateTime(0)
+  gender         Boolean        @default(true)
+  bio            String?        @db.VarChar(255)
+  private        Boolean        @default(false)
+  disabled       Boolean        @default(false)
+  isActive       Boolean        @default(false)
+  lastActiveAt   DateTime?      @default(now()) @db.DateTime(0)
+  token          String?        @db.VarChar(255)
+  mute           Boolean        @default(false)
+  allowMessaging Boolean        @default(true)
+  showState      Boolean        @default(true)
+  categoryId     Int?
+  professional   Boolean        @default(false)
+  state          String?        @db.VarChar(255)
+  isValid        Boolean        @default(false)
+  otpCode        Int?
+  createdAt      DateTime?      @db.DateTime(0)
+  updatedAt      DateTime?      @db.DateTime(0)
   // archivedconversations                          archivedconversations[]
-  comments          Comment[]
-  favourites        Favourite[]
-  posts             Post[]
-  followers         Follow[]            @relation("followers")
-  following         Follow[]            @relation("following")
-  conversation_User Conversation_User[]
-  notifications     Notification[]
-  stories           Story[]
-  StoryLike         StoryLike[]
-  StoryComment      StoryComment[]
-  storyseen         storyseen[]
-  countryId         String?
-  country           Country?            @relation(fields: [countryId], references: [id], onUpdate: Restrict)
+  comments       Comment[]
+  favourites     Favourite[]
+  posts          Post[]
+  // conversation_User Conversation_User[]
+  notifications  Notification[]
+  stories        Story[]
+  StoryLike      StoryLike[]
+  StoryComment   StoryComment[]
+  storyseen      storyseen[]
+  countryId      String?
+  country        Country?       @relation(fields: [countryId], references: [id], onUpdate: Restrict)
   // removerequests                                 removerequests[]
   // socialmedia                                    socialmedia[]
   // media                                          media?                @relation(fields: [pictureId], references: [id], onUpdate: Restrict, map: "users_ibfk_1")
@@ -61,8 +60,9 @@ model User {
 
   // @@index([countryId], map: "countryId")
   // @@index([pictureId], map: "pictureId")
-  Replay      Replay[]
-  Replaylikes Replaylikes[]
+  replay      Replay[]
+  replaylikes Replaylikes[]
+  // messages     Message[]
 }
 
 model Country {
@@ -223,7 +223,7 @@ model Media {
   // stories            stories[]
   // users              users[]
   // validationrequests validationrequests[]
-  Message   Message?
+  // Message   Message?
   Story     Story[]
   Replay    Replay[]
 }
@@ -247,67 +247,68 @@ model Follow {
 
 //   model message
 
-model Message {
-  id             String        @id @default(cuid())
-  content        String?       @db.VarChar(255)
-  type           messages_type @default(text)
-  // /  conversationId String
-  userId         String
-  // accountId      Int?
-  createdAt      DateTime      @default(now()) @db.DateTime(0)
-  // postId         Int?
-  mediaId        String?       @unique // This field must be unique
-  conversationId String?       @unique
-  media          Media?        @relation(fields: [mediaId], references: [id], onUpdate: Restrict)
-  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+// model Message {
+//   id             String        @id @default(cuid())
+//   content        String?       @db.VarChar(255)
+//   type           messages_type @default(text)
+//   // /  conversationId String
+//   userId         String
+//   user           User          @relation(fields: [userId], references: [id])
+//   // accountId      Int?
+//   createdAt      DateTime      @default(now()) @db.DateTime(0)
+//   // postId         Int?
+//   mediaId        String?       @unique // This field must be unique
+//   conversationId String?       @unique
+//   media          Media?        @relation(fields: [mediaId], references: [id], onUpdate: Restrict)
+//   conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
-  // media          Media?        @relation(fields: [mediaId], references: [id], onUpdate: Restrict)
-  // conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  // // users_messages_userIdTousers    users         @relation("messages_userIdTousers", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "messages_ibfk_3")
-  // users_messages_accountIdTousers users?        @relation("messages_accountIdTousers", fields: [accountId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "messages_ibfk_4")
-  // posts                           posts?        @relation(fields: [postId], references: [id], onUpdate: Restrict, map: "messages_ibfk_5")
+// }
+// media          Media?        @relation(fields: [mediaId], references: [id], onUpdate: Restrict)
+// conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+// // users_messages_userIdTousers    users         @relation("messages_userIdTousers", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "messages_ibfk_3")
+// users_messages_accountIdTousers users?        @relation("messages_accountIdTousers", fields: [accountId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "messages_ibfk_4")
+// posts                           posts?        @relation(fields: [postId], references: [id], onUpdate: Restrict, map: "messages_ibfk_5")
 
-  // @@index([accountId], map: "accountId")
-  // @@index([conversationId], map: "conversationId")
-  // @@index([mediaId], map: "mediaId")
-  // @@index([postId], map: "postId")
-  // @@index([userId], map: "userId")
-}
+// @@index([accountId], map: "accountId")
+// @@index([conversationId], map: "conversationId")
+// @@index([mediaId], map: "mediaId")
+// @@index([postId], map: "postId")
+// @@index([userId], map: "userId")
 
 // _________________
 
-model Conversation {
-  id                  String              @id @default(cuid())
-  type                conversations_type  @default(individual)
-  updatedAt           DateTime            @default(now()) @db.DateTime(0)
-  simatId             String?
-  // archivedconversations archivedconversations[]
-  conversationmembers Conversation_User[]
-  simats              simats?             @relation(fields: [simatId], references: [id], onUpdate: Restrict, map: "conversations_ibfk_1")
-  messages            Message[]
-  // reports             reports[]
+// model Conversation {
+//   id                  String              @id @default(cuid())
+//   type                conversations_type  @default(individual)
+//   updatedAt           DateTime            @default(now()) @db.DateTime(0)
+//   simatId             String?
+//   // archivedconversations archivedconversations[]
+//   conversationmembers Conversation_User[]
+//   simats              simats?             @relation(fields: [simatId], references: [id], onUpdate: Restrict, map: "conversations_ibfk_1")
+//   // messages            Message[]
+//   // reports             reports[]
 
-  // @@index([simatId], map: "simatId")
-}
+//   // @@index([simatId], map: "simatId")
+// // }
 
-model Conversation_User {
-  id                 String       @id @default(cuid())
-  conversationId     String
-  userId             String
-  lastSeenAt         DateTime?    @db.DateTime(0)
-  allowNotifications Boolean      @default(true)
-  isParticipant      Boolean      @default(false)
-  conversation       Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  users              User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+// model Conversation_User {
+//   id                 String       @id @default(cuid())
+//   conversationId     String
+//   userId             String
+//   lastSeenAt         DateTime?    @db.DateTime(0)
+//   allowNotifications Boolean      @default(true)
+//   isParticipant      Boolean      @default(false)
+//   conversation       Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+//   users              User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
-  @@index([conversationId], map: "conversationId")
-  @@index([userId], map: "userId")
-}
+//   @@index([conversationId], map: "conversationId")
+//   @@index([userId], map: "userId")
+// }
 
 model simats {
-  id            String         @id @default(cuid())
-  path          String?        @db.VarChar(255)
-  conversations Conversation[]
+  id   String  @id @default(cuid())
+  path String? @db.VarChar(255)
+  // conversations Conversation[]
 }
 
 model Notification {
