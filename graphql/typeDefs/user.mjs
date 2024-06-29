@@ -1,9 +1,9 @@
 import { gql } from "apollo-server-express";
 export default gql`
   extend type Query {
+    checkUsername(username: String!): Boolean!
     Login(identifier: String!, password: String!): UserToken!
     getUserById(userId: ID!): User
-    checkUsername(username: String!): Boolean!
     suggestUsers(offset: Int!, limit: Int!): [User!]! @userAuth
     searchUser(query: String!, offset: Int!, limit: Int!): [User!]! @userAuth
     oAuth(email: String!): UserToken!
@@ -12,7 +12,8 @@ export default gql`
   }
   extend type Mutation {
     SignUp(user: UserInput): UserToken!
-    EditProfile(userInput: EditUserInput): User @userAuth
+    editProfile(userInput: EditUserInput): User @userAuth
+    adminEditUser(userInput: EditUserInput, userId: ID!): User @adminAuth
     disableAccount(password: String!): User! @userAuth
     togglePrivate: User! @userAuth
     updateToken(token: String!): String! @userAuth
@@ -78,13 +79,15 @@ export default gql`
     phone: String!
   }
   input EditUserInput {
-    name: String!
-    username: String!
-    countryId: ID!
-    profilePicture: Upload
-    pictureId: ID
+    name: String
+    username: String
+    countryId: ID
+    avatar: Upload
     bio: String
     state: String
+    showState: Boolean
+    isPrivate: Boolean
+    gender: Boolean
   }
   type UserToken {
     user: User!

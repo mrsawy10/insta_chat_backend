@@ -1,13 +1,15 @@
-import user from "./user/typeDefs.mjs";
-import post from "./post/typeDefs.mjs";
-import country from "./country/typeDefs.mjs";
-import follow from "./follow/typeDefs.mjs";
+import user from "./typeDefs/user.mjs";
+import post from "./typeDefs/post/index.mjs";
+import country from "./typeDefs/country.mjs";
+import follow from "./typeDefs/follow.mjs";
 import { gql } from "apollo-server-express";
 
 // scalar Upload
 export default [
   gql`
     directive @userAuth on FIELD_DEFINITION
+    directive @adminAuth on FIELD_DEFINITION
+    
     scalar Upload
 
     type Query {

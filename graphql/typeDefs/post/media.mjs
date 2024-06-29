@@ -8,8 +8,6 @@ export default gql`
         path : String!
     }
 
-
-
     input EditMedia {
         id : ID , 
         path : String 

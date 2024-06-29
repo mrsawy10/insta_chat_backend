@@ -8,61 +8,62 @@ datasource db {
 }
 
 model User {
-  id           String  @id @default(cuid())
-  name         String  @db.VarChar(255)
-  avatar       String?
-  numFollowers Int     @default(0)
-  username     String  @unique() @db.VarChar(255)
-  numFollowing   Int            @default(0)
-  followers      Follow[]       @relation("followers")
-  following      Follow[]       @relation("following")
-  numPosts       Int            @default(0)
-  numVisits      Int            @default(0)
-  validated      Boolean        @default(false)
-  email          String         @unique(map: "email") @db.VarChar(255)
-  phone          String?        @unique(map: "phone") @db.VarChar(255)
-  password       String         @db.VarChar(255)
-  birthday       DateTime       @default(now()) @db.DateTime(0)
-  gender         Boolean        @default(true)
-  bio            String?        @db.VarChar(255)
-  private        Boolean        @default(false)
-  disabled       Boolean        @default(false)
-  isActive       Boolean        @default(false)
-  lastActiveAt   DateTime?      @default(now()) @db.DateTime(0)
-  token          String?        @db.VarChar(255)
-  mute           Boolean        @default(false)
-  allowMessaging Boolean        @default(true)
-  showState      Boolean        @default(true)
-  categoryId     Int?
-  professional   Boolean        @default(false)
-  state          String?        @db.VarChar(255)
-  isValid        Boolean        @default(false)
+  id             String     @id @default(cuid())
+  name           String     @db.VarChar(255)
+  avatar         String
+  numFollowers   Int        @default(0)
+  username       String     @unique() @db.VarChar(255)
+  numFollowing   Int        @default(0)
+  followers      Follow[]   @relation("followers")
+  following      Follow[]   @relation("following")
+  numPosts       Int        @default(0)
+  numVisits      Int        @default(0)
+  validated      Boolean    @default(false)
+  email          String     @unique(map: "email") @db.VarChar(255)
+  phone          String?    @unique(map: "phone") @db.VarChar(255)
+  password       String     @db.VarChar(255)
+  birthday       DateTime   @default(now()) @db.DateTime(0)
+  gender         Boolean    @default(true)
+  bio            String?    @db.VarChar(255)
+  isPrivate        Boolean    @default(false)
+  disabled       Boolean    @default(false)
+  isActive       Boolean    @default(false)
+  lastActiveAt   DateTime?  @default(now()) @db.DateTime(0)
+  token          String?    @db.VarChar(255)
+  mute           Boolean    @default(false)
+  allowMessaging Boolean    @default(true)
+  showState      Boolean    @default(true)
+  state          String?    @db.VarChar(255)
+  // categoryId     Int?
+  // professional   Boolean    @default(false)
+  isValid        Boolean    @default(false)
   otpCode        Int?
-  createdAt      DateTime?      @db.DateTime(0)
-  updatedAt      DateTime?      @db.DateTime(0)
+  createdAt      DateTime?  @db.DateTime(0)
+  updatedAt      DateTime?  @db.DateTime(0)
+  role           user_roles @default(user)
+
   // archivedconversations                          archivedconversations[]
-  comments       Comment[]
-  favourites     Favourite[]
-  posts          Post[]
+  comments      Comment[]
+  favourites    Favourite[]
+  posts         Post[]
   // conversation_User Conversation_User[]
-  notifications  Notification[]
-  stories        Story[]
-  StoryLike      StoryLike[]
-  StoryComment   StoryComment[]
-  storyseen      storyseen[]
-  countryId      String?
-  country        Country?       @relation(fields: [countryId], references: [id], onUpdate: Restrict)
+  notifications Notification[]
+  stories       Story[]
+  StoryLike     StoryLike[]
+  StoryComment  StoryComment[]
+  storySeen     StorySeen[]
+  countryId     String?
+  country       Country?       @relation(fields: [countryId], references: [id], onUpdate: Restrict)
   // removerequests                                 removerequests[]
   // socialmedia                                    socialmedia[]
-  // media                                          media?                @relation(fields: [pictureId], references: [id], onUpdate: Restrict, map: "users_ibfk_1")
   // validationrequests                             validationrequests[]
   // wallets                                        wallets[]
-
   // @@index([countryId], map: "countryId")
   // @@index([pictureId], map: "pictureId")
-  replay      Replay[]
-  replaylikes Replaylikes[]
+  replay        Replay[]
+  replaylikes   Replaylikes[]
   // messages     Message[]
+  likes         Like[]
 }
 
 model Country {
@@ -80,11 +81,11 @@ model Story {
   createdAt     DateTime?      @db.DateTime(0)
   expiredAt     DateTime?      @db.DateTime(0)
   updatedAt     DateTime?      @db.DateTime(0)
-  media         Media          @relation(fields: [mediaId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "stories_ibfk_1")
-  users         User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "stories_ibfk_2")
+  media         Media          @relation(fields: [mediaId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  users         User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   storyComments StoryComment[]
   storyLikes    StoryLike[]
-  storyseen     storyseen[]
+  storySeen     StorySeen[]
 
   @@index([mediaId], map: "mediaId")
   @@index([userId], map: "userId")
@@ -115,12 +116,12 @@ model StoryComment {
   @@index([storyId], map: "storyId")
 }
 
-model storyseen {
+model StorySeen {
   id      String  @id @default(cuid())
   userId  String
   storyId String?
-  users   User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storyseen_ibfk_1")
-  story   Story?  @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "storyseen_ibfk_2")
+  users   User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  story   Story?  @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
   @@index([storyId], map: "storyId")
   @@index([userId], map: "userId")
@@ -176,39 +177,42 @@ model Post {
   id            String      @id @default(cuid())
   title         String?     @db.VarChar(255)
   type          posts_type  @default(note)
-  likes         Int         @default(0)
+  numOfLikes    Int         @default(0)
   numOfComments Int         @default(0)
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  // user        User
   createdAt     DateTime?   @db.DateTime(0)
   updatedAt     DateTime?   @db.DateTime(0)
   comments      Comment[]
-  // favorites        favorites[]
-  // messages         messages[]
-  // posthashtags     posthashtags[]     @ignore
-  // postkeywords     postkeywords[]     @ignore
-  postmedia     postmedia[] @ignore
-  // reels            reels[]
+  postMedia     PostMedia[]
   // reports          reports[]
-  // services         services[]
-  // unimportantposts unimportantposts[] @ignore
-  // works            works[]
   favourites    Favourite[]
+  likes         Like[]
 
   @@index([userId], map: "userId")
 }
 
-model postmedia {
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now()) @db.DateTime(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([postId], map: "postId")
+  @@index([userId], map: "userId")
+}
+
+model PostMedia {
   id      String @id @default(cuid())
   postId  String
   mediaId String
   post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   media   Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
-  // @@index([mediaId], map: "mediaId")
-  // @@index([postId], map: "postId")
-  // @@ignore
+  @@index([mediaId], map: "mediaId")
+  @@index([postId], map: "postId")
 }
 
 model Media {
@@ -216,16 +220,10 @@ model Media {
 
   path      String      @db.VarChar(255)
   comments  Comment[]
-  // messages           messages[]
-  postmedia postmedia[] @ignore
-  // reels              reels[]
-  // replays            replays[]
-  // stories            stories[]
-  // users              users[]
-  // validationrequests validationrequests[]
-  // Message   Message?
-  Story     Story[]
-  Replay    Replay[]
+  postMedia PostMedia[]
+
+  Story  Story[]
+  Replay Replay[]
 }
 
 model Favourite {
@@ -243,6 +241,8 @@ model Follow {
   followingId String
   follower    User   @relation("following", fields: [followerId], references: [id])
   following   User   @relation("followers", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
 }
 
 //   model message
@@ -403,18 +403,6 @@ enum notification_type {
 
 //   name         String         @db.VarChar(255)
 //   postkeywords postkeywords[] @ignore
-// }
-
-// model likes {
-//   id        Int      @id @default(autoincrement())
-//   userId    Int
-//   postId    Int
-//   createdAt DateTime @default(now()) @db.DateTime(0)
-//   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "likes_ibfk_1")
-//   posts     posts    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "likes_ibfk_2")
-
-//   @@index([postId], map: "postId")
-//   @@index([userId], map: "userId")
 // }
 
 // /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -661,12 +649,18 @@ enum messages_type {
   account
 }
 
+enum user_roles {
+  admin
+  user
+  moderator
+}
+
 enum posts_type {
   note
   image
   reel
-  work
-  service
+  // work
+  // service
 }
 
 // // enum validationrequests_fileType {

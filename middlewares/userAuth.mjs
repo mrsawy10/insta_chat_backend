@@ -14,7 +14,7 @@ export const userAuth = async (request, response, next) => {
   let decodedToken = null;
   // decode token
   try {
-    decodedToken = await verify(token, JWT_SECRET);
+    decodedToken = await verify(token, process.env.JWT_SECRET);
   } catch (error) {
     request.isUserAuth = false;
     return next();
@@ -25,19 +25,22 @@ export const userAuth = async (request, response, next) => {
     return next();
   }
 
+  // console.log({ decodedToken });
+
   // check if realy this token belongs to a valid doctor
   var user = await prisma.user.findFirst({
     where: {
       email: decodedToken.identifier,
-      id: decodedToken.id,
     },
   });
+  // console.log({ user });
 
   // check if there is a valid user
-  if (!user || !user.isValid) {
+  if (!user) {
     request.isUserAuth = false;
     return next();
   }
+
   // assing the user and validation to the request
   request.user = user;
   request.isUserAuth = true;

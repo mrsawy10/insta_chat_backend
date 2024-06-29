@@ -13,10 +13,32 @@ export function userAuthDirective(schema) {
         return {
           ...fieldConfig,
           resolve: async function (source, args, context, info) {
-            if (context.isUserAuth == false) {
+            if (!context.isUserAuth) {
               throw new ApolloError("Unauthorized", 403);
             }
 
+            return await resolve(source, args, context, info);
+          },
+        };
+      }
+    },
+  });
+}
+
+export function adminAuthDirective(schema) {
+  return mapSchema(schema, {
+    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+      const directive = getDirective(schema, fieldConfig, "adminAuth");
+
+      if (directive) {
+        const { resolve = defaultFieldResolver } = fieldConfig;
+
+        return {
+          ...fieldConfig,
+          resolve: async function (source, args, context, info) {
+            if (!context.user.role != `admin`) {
+              throw new ApolloError("Unauthorized", 403);
+            }
             return await resolve(source, args, context, info);
           },
         };

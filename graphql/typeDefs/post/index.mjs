@@ -15,10 +15,10 @@ export default [
     comment , 
     replay  , 
     story , 
-    reel , 
+    // reel , 
     like , 
-    hashtag , 
-    work , 
-    service , 
-    Keyword
+    // hashtag , 
+    // work , 
+    // service , 
+    // Keyword
 ]

@@ -4,6 +4,7 @@ import bcryptjs from "bcryptjs";
 import e from "express";
 import { createToken } from "../../../utils/jwt.mjs";
 import { convertToValidDate } from "../../../utils/validateDate.mjs";
+import uploadFileToS3, { deleteFileFromS3 } from "../../../utils/s3/uploadFileToS3.mjs";
 //___________________________________
 const { hash, compare } = bcryptjs;
 // import { SocialMediaValidator, SignUpValidator, LoginValidator } from "../../../validators";
@@ -273,6 +274,13 @@ export default {
         // check the password confirmation
         if (user.password != user.confirmPassword) throw Error("Password not match");
 
+        let foundedUser = await prisma.user.findFirst({
+          where: {
+            email: user.email,
+          },
+        });
+        if (foundedUser) throw new Error("User already exists");
+
         user.password = await hash(user.password, +process.env.ROUNDS_OF_HASHING);
         // create token
         var token = await createToken(user.email, user.password);
@@ -293,59 +301,38 @@ export default {
       }
     },
 
-    //     EditProfile: async (_, { userInput }, { user, db }) => {
-    //       try {
-    //         // check if the social media need to be updated
-    //         if (userInput.socialMedia) {
-    //           // apply a validation for the input
-
-    //           await SocialMediaValidator.validate(userInput.socialMedia, { abortEarly: true });
-
-    //           // whene we reach this point we are sure that social media is set and validated
-    //           // check if the user allready set some social media account or this is his first time
-
-    //           const previousSocialMedia = await user.getSocialMedia();
-
-    //           if (!previousSocialMedia) {
-    //             await user.createSocialMedia(userInput.socialMedia);
-    //           } else {
-    //             await previousSocialMedia.update(userInput.socialMedia);
-    //           }
-    //         }
-
-    //         // check if the user upload new profile picture
-    //         if (userInput.profilePicture) {
-    //           // check if the user have a previous profile picture
-    //           const picture = await user.getProfilePicture();
-    //           if (picture) {
-    //             // if so delete it from the server storage
-    //             // and delete it from the database
-    //             await deleteFiles([picture.path]);
-
-    //             await picture.destroy();
-    //           }
-    //           // if the user upload new picture
-    //           // save it in the pictures directory and assign it to the given user
-    //           const output = (await uploadFiles([userInput.profilePicture], UPLOAD_PICTURES_DIR)).pop();
-    //           const media = await db.Media.create({
-    //             path: output,
-    //           });
-    //           userInput.pictureId = media.id;
-    //         } else if (!userInput.pictureId) {
-    //           const picture = await user.getProfilePicture();
-    //           if (picture) {
-    //             // if so delete it from the server storage
-    //             // and delete it from the database
-    //             await deleteFiles([picture.path]);
-
-    //             await picture.destroy();
-    //           }
-    //         }
-    //         return await user.update(userInput);
-    //       } catch (error) {
-    //         return new ApolloError(error.message);
-    //       }
-    //     },
+    editProfile: async (_, { userInput }, { user, prisma }) => {
+      let { avatar } = userInput;
+      if (avatar) {
+        if (user.avatar) {
+          await deleteFileFromS3(user.avatar);
+        }
+        const avatarUrl = await uploadFileToS3(avatar);
+        userInput.avatar = avatarUrl;
+      }
+      return await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: userInput,
+      });
+    },
+    adminEditUser: async (_, { userInput , userId }, { user, prisma }) => {
+      let { avatar } = userInput;
+      if (avatar) {
+        if (user.avatar) {
+          await deleteFileFromS3(user.avatar);
+        }
+        const avatarUrl = await uploadFileToS3(avatar);
+        userInput.avatar = avatarUrl;
+      }
+      return await prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: userInput,
+      });
+    },
     //     disableAccount: async (_, { password }, { db, user }) => {
     //       // check the password
     //       var isMath = await compare(password, user.password);
